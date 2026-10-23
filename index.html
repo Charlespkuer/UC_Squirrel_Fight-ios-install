@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#173b2a">
+<title>松鼠大战 1.0.4 · iOS 安装</title>
+<style>
+  :root { color-scheme:light; --ink:#2f2418; --muted:#7d684c; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; padding:28px 16px 40px; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:radial-gradient(circle at 50% 0%,#3f7c50 0,#1d4b34 42%,#102a1e 100%); }
+  .wrap { width:min(640px,100%); margin:0 auto; }
+  .card { background:linear-gradient(#fffdf2,#f8edce); border:4px solid #a9854d; border-radius:30px; padding:26px 22px 24px;
+    box-shadow:inset 0 0 0 4px #fffdf2,0 14px 40px #07170e88; }
+  .kicker { text-align:center; color:#8a6a3a; font-size:13px; letter-spacing:.18em; font-weight:700; }
+  h1 { margin:8px 0 4px; text-align:center; font-size:36px; line-height:1.1; color:#5b3b1c; letter-spacing:1px; }
+  .sub { margin:0 0 18px; text-align:center; color:var(--muted); font-size:15px; }
+  .warn { margin:0 0 18px; padding:13px 15px; border-radius:15px; background:#fff0c2; border:2px solid #e5bd62;
+    color:#69431b; font-size:14px; line-height:1.7; }
+  .warn b { color:#9b351b; }
+  .btn { display:block; text-decoration:none; border-radius:18px; padding:16px 18px; margin:12px 0; text-align:center;
+    box-shadow:inset 0 3px 0 #ffffffa0,0 5px 0 #72501a; border:3px solid #9a6b2b; }
+  .btn b { display:block; font-size:22px; line-height:1.25; }
+  .btn span { display:block; margin-top:3px; font-size:13px; opacity:.82; }
+  .btn:active { transform:translateY(2px); box-shadow:inset 0 3px 0 #ffffffa0,0 3px 0 #72501a; }
+  .scene { color:#21370e; background:linear-gradient(#e9ffbf,#b8e77c 48%,#7cc447); border-color:#5d8d2c; }
+  .legacy { color:#4d3415; background:linear-gradient(#fff2b9,#ffd768 48%,#e8ae3d); }
+  .mirror { display:block; margin:-4px 0 4px; text-align:center; color:#6b5433; font-size:13px; text-decoration:underline; }
+  .mirror-note { margin:0 0 4px; text-align:center; color:#9a7d51; font-size:11px; line-height:1.55; }
+  .steps { margin:20px 0 0; padding:0 0 0 22px; color:#5f4a2d; font-size:14px; line-height:1.85; }
+  .steps li { margin:0 0 7px; }
+  .meta { margin-top:20px; padding-top:15px; border-top:2px dashed #d8c292; color:#7b6547; font-size:12px; line-height:1.75; }
+  .ios-hint { margin:14px 0 0; text-align:center; color:#eaf7df; font-size:13px; line-height:1.6; }
+  .ios-hint b { color:#fff0a8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="kicker">UC 松鼠大战 · iOS 安装</div>
+    <h1>松鼠大战</h1>
+    <p class="sub">1.0.4 · iOS 26+ 修复版 · 已企业签名</p>
+
+    <div class="warn">
+      <b>装错会闪退：</b>先看 设置 → 通用 → 关于本机 的 iOS 版本，只点对应版本的一个按钮。
+    </div>
+
+    <a class="btn scene" href="itms-services://?action=download-manifest&amp;url=https%3A%2F%2Fcharlespkuer.github.io%2FUC_Squirrel_Fight-ios-install%2Fmanifest-ios26.xml">
+      <b>iOS 26 / 27 · 安装新版</b>
+      <span>等比贴合 · 不默认拉伸 · 构建 107</span>
+    </a>
+    <a class="mirror" href="itms-services://?action=download-manifest&amp;url=https%3A%2F%2Fcharlespkuer.github.io%2FUC_Squirrel_Fight-ios-install%2Fmanifest-ios26-mirror.xml">下载很慢？试试新版 GitHub 加速镜像</a>
+    <a class="btn legacy" href="itms-services://?action=download-manifest&amp;url=https%3A%2F%2Fcharlespkuer.github.io%2FUC_Squirrel_Fight-ios-install%2Fmanifest-legacy.xml">
+      <b>iOS 16–25 · 安装 legacy</b>
+      <span>传统生命周期 · 构建 104</span>
+    </a>
+    <a class="mirror" href="itms-services://?action=download-manifest&amp;url=https%3A%2F%2Fcharlespkuer.github.io%2FUC_Squirrel_Fight-ios-install%2Fmanifest-legacy-mirror.xml">下载很慢？试试 legacy GitHub 加速镜像</a>
+    <p class="mirror-note">两个镜像都只换 IPA 下载线路，签名包相同；镜像失败请用对应的官方按钮。</p>
+
+    <ol class="steps">
+      <li>必须用 <b>Safari</b> 打开本页；微信 / QQ 内置浏览器会拦截安装。</li>
+      <li>按上面的系统版本，只点对应的那一个按钮。</li>
+      <li>弹出「在“iTunes”中打开链接吗？」时点「打开」。</li>
+      <li>提示未受信任时，去 设置 → 通用 → VPN 与设备管理 信任 <b>RAKUTEN SECURITIES, INC.</b>。</li>
+    </ol>
+
+    <p class="meta">企业签名 · Team HWK767YYMF · 描述文件到期 2026-11-05</p>
+  </div>
+  <p class="ios-hint">必须使用 iPhone / iPad 的 <b>Safari</b> · 安装协议由 iOS 系统接管</p>
+</div>
+</body>
+</html>
