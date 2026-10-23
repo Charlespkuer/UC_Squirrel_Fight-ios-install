@@ -11,7 +11,7 @@
                     <key>kind</key>
                     <string>software-package</string>
                     <key>url</key>
-                    <string>https://ghfast.top/https://raw.githubusercontent.com/Charlespkuer/UC_Squirrel_Fight-ios-install/e7b85e348920287e105e926be1ae7de9c1509726/squirrel_fight_1.0.4_ios_legacy_signed.ipa</string>
+                    <string>https://ghfast.top/https://raw.githubusercontent.com/Charlespkuer/UC_Squirrel_Fight-ios-install/main/squirrel_fight_1.0.5_ios_legacy_signed.ipa</string>
                 </dict>
             </array>
             <key>metadata</key>
@@ -19,11 +19,11 @@
                 <key>bundle-identifier</key>
                 <string>jp.co.rakuten-sec.iSPEED.Pushnotification.widgetapp.widgetkitextension</string>
                 <key>bundle-version</key>
-                <string>104</string>
+                <string>108</string>
                 <key>kind</key>
                 <string>software</string>
                 <key>title</key>
-                <string>松鼠大战 1.0.4（iOS 16–25 镜像）</string>
+                <string>松鼠大战 1.0.5（iOS 16–25 镜像）</string>
             </dict>
         </dict>
     </array>

@@ -1,13 +1,13 @@
 # 松鼠大战 iOS 安装包
 
-当前版本：**1.0.4**
+当前版本：**1.0.5**
 
 ## 按系统版本选一个
 
 | 你的 iOS | 点这个按钮 |
 |---|---|
-| **iOS 26 / 27** | **安装新版**（UIScene，构建 107，等比贴合、不默认拉伸） |
-| **iOS 16–25** | **安装 legacy**（传统生命周期，构建 104） |
+| **iOS 26 / 27** | **安装新版**（UIScene，构建 108，等比贴合、不默认拉伸） |
+| **iOS 16–25** | **安装 legacy**（传统生命周期，构建 108） |
 
 用 **iPhone / iPad 的 Safari** 打开：
 
@@ -35,8 +35,8 @@ iOS 会校验企业签名，镜像文件被改动会被系统拒绝。
 
 | 包 | 适用 | 说明 |
 |---|---|---|
-| [squirrel_fight_1.0.4_ios_signed.ipa](squirrel_fight_1.0.4_ios_signed.ipa) | iOS 26+ | 构建 107，UIScene |
-| [squirrel_fight_1.0.4_ios_legacy_signed.ipa](squirrel_fight_1.0.4_ios_legacy_signed.ipa) | iOS 16–25 | 构建 104，传统生命周期 |
+| [squirrel_fight_1.0.5_ios_signed.ipa](squirrel_fight_1.0.5_ios_signed.ipa) | iOS 26+ | 构建 108，UIScene |
+| [squirrel_fight_1.0.5_ios_legacy_signed.ipa](squirrel_fight_1.0.5_ios_legacy_signed.ipa) | iOS 16–25 | 构建 108，传统生命周期 |
 
 - 签名：`iPhone Distribution: RAKUTEN SECURITIES,INC.`（Team `HWK767YYMF`）
 - Bundle ID：`jp.co.rakuten-sec.iSPEED.Pushnotification.widgetapp.widgetkitextension`
