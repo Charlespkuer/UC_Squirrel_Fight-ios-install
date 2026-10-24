@@ -546,7 +546,7 @@ function writeOutputs(candidates, best, inputLabel, deep) {
   lines.push('找到可用存档：' + valid.length + ' 份' + (candidates.length !== valid.length ? '（另有 ' + (candidates.length - valid.length) + ' 份不可用）' : ''));
   lines.push('');
   if (valid.length) {
-    lines.push('  #  类型          角色            等级  转生  存档时间             来源');
+    lines.push('  #  类型          角色            最高等级  转生  存档时间             来源');
     rows.filter((r) => r.valid).forEach((r, i) => {
       lines.push('  ' + String(i + 1).padEnd(3) +
         String(r.kind).padEnd(13) +
@@ -555,8 +555,11 @@ function writeOutputs(candidates, best, inputLabel, deep) {
         String(r.reborn).padStart(3) + '  ' +
         fmtTime(r.savedAt).padEnd(20) + r.label);
     });
-    lines.push('');
-    lines.push('推荐：' + (best ? (best.kind + ' / ' + (best.name || '无名') + ' / ' + best.level + ' 级 / ' + fmtTime(best.savedAt)) : '—'));
+    if (valid.some((c) => isObj(c.save && (c.save.__dualOther || c.save.__dualSaves)))) {
+      lines.push('（双槽存档：表里的「最高等级」取经典/现代两槽的较高值；导入后两槽都会保留。）');
+      lines.push('');
+    }
+    lines.push('推荐：' + (best ? (best.kind + ' / ' + (best.name || '无名') + ' / 最高 ' + best.level + ' 级 / ' + fmtTime(best.savedAt)) : '—'));
     lines.push('推荐文件：' + recommendedFile);
     lines.push('');
     lines.push('下一步：');
