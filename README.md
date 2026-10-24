@@ -1,12 +1,27 @@
-# 松鼠大战 iOS 安装包（暂停安装）
+# 松鼠大战 iOS 安装包（暂停安装 · 网页版可用）
 
 > **2026-10-23：企业证书已被 Apple 吊销（revoked / certificateHold）。**
 > 旧包现在无法安装，也无法在已安装的设备上启动；重新信任 / 重启 / 重装同一个 IPA 都不会恢复。
 > **已安装的玩家请不要删除 App**，先按 [存档救援指南](https://charlespkuer.github.io/UC_Squirrel_Fight-ios-install/rescue.html)
 > 把存档取出来。删除 App 会连存档容器一起删除。
 
+## 网页版 / PWA（现在就能玩）
+
+**<https://charlespkuer.github.io/UC_Squirrel_Fight-ios-install/web/>**
+
+- iPhone / iPad 用 **Safari** 打开 → 分享 → **添加到主屏幕**；先安装，再从游戏里
+  「系统 → 导入存档」导入救援 JSON。
+- 主屏幕 Web App 和 Safari 标签页的存储是**两个容器**；先玩过 Safari 的话先在那边导出，再切过去导入。
+- 主屏幕 Web App 豁免 ITP 的 7 天清理；Safari 标签页仍受影响。两者都建议定期「存档导出」。
+- 这是本仓库 `web/` 下的静态站点，由 GitHub Pages 直接托管；`web-src/` 里是 PWA 源文件和重建脚本：
+  ```bash
+  node web-src/build-web.cjs --game "/path/to/Squirrel Fight"
+  ```
+  它会复制游戏源码、应用 `web-src/web-mode.patch`、生成 `web/`（含 manifest / sw / icons）。
+
 ## 现在能做什么
 
+- 不想等原生包：直接玩上面的网页版 / PWA。
 - 已经装过旧版的玩家：打开 **文件 App → 我的 iPhone/iPad → 松鼠大战**，看有没有导出的 `.json`；
   有就先拷到 iCloud 云盘 / 电脑。没有的话用电脑从 App 容器或本地备份里取
   `Library/Application Support/com.ssdz.classic/save/progress.json`。
@@ -49,6 +64,8 @@ stock iPhone 也无法直接安装未签名 IPA。只有把未签名包改成旧
 | 文件 | 作用 |
 |---|---|
 | `index.html` | 当前暂停安装页 |
+| `web/` | 网页版 / PWA 静态站点（本仓库 Pages 托管） |
+| `web-src/` | PWA 源文件、web-mode.patch、重建脚本 |
 | `rescue.html` | 玩家存档救援指南 |
 | `rescue/ios-save-rescue.cjs` | 从 `.xcappdata` / Finder 备份 / 单文件提取存档 |
 | `manifest*.xml` / `manifest.plist` | 旧 OTA 清单（已失效，仅留档） |

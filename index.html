@@ -51,7 +51,7 @@
   <div class="card">
     <div class="kicker">UC 松鼠大战 · iOS 安装</div>
     <h1>暂停安装</h1>
-    <p class="sub">企业证书已被 Apple 吊销 · 旧包无法安装 / 启动<br>已经装过的玩家：先救存档，不要删 App</p>
+    <p class="sub">企业证书已被 Apple 吊销 · 旧包无法安装 / 启动<br>网页版 / PWA 已上线：不用证书，先救存档再导入</p>
 
     <div class="alert">
       <b>不要删除「松鼠大战」App！</b><br>
@@ -64,9 +64,20 @@
       重新信任、重启、覆盖安装同一个 IPA 都不会恢复。
     </div>
 
+    <div class="warn">
+      <b>网页版 / PWA 已上线：</b>iPhone / iPad 用 <b>Safari</b> 打开网页版 → 分享 → <b>添加到主屏幕</b>；
+      先安装，再从游戏里「系统 → 导入存档」导入救援 JSON。主屏幕 Web App 和 Safari 的存储是隔离的，
+      先玩过 Safari 的话先在那边导出。不需要企业证书。
+    </div>
+
+    <a class="btn rescue" href="web/">
+      <b>打开网页版 / PWA</b>
+      <span>不用证书 · 先添加到主屏幕，再导入存档</span>
+    </a>
+
     <a class="btn rescue" href="rescue.html">
       <b>查看存档救援指南</b>
-      <span>先备份 / 取出旧版存档 · 等新版本再导入</span>
+      <span>先备份 / 取出旧版存档 · 再导入网页版</span>
     </a>
 
     <ol class="steps">
@@ -75,8 +86,8 @@
         有的话先拷到 iCloud 云盘 / 电脑。</li>
       <li>没有导出过：借一台 Mac / Windows 电脑，按救援指南从 App 容器或本地备份里取
         <code>progress.json</code>。</li>
-      <li>等新的分发方式（网页版 / 新签名 / TestFlight）发布后，在游戏里
-        <b>系统 → 导入存档</b> 导入。</li>
+      <li>网页版现在已经可以导入：先按上面打开并添加到主屏幕，再在游戏里
+        <b>系统 → 导入存档</b> 导入。原生新包等后续。</li>
     </ol>
 
     <details>
@@ -96,7 +107,7 @@
       不在打包。旧 IPA 仍保留在仓库里，只用于核对 / 提取存档，不要再用它安装。
     </p>
   </div>
-  <p class="ios-hint">必须使用 iPhone / iPad 的 <b>Safari</b> 阅读 · 救援脚本在电脑上运行</p>
+  <p class="ios-hint">网页版必须用 iPhone / iPad 的 <b>Safari</b> 打开 · 救援脚本在电脑上运行</p>
 </div>
 </body>
 </html>
