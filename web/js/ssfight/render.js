@@ -659,6 +659,19 @@
     for (const v of clip.nodes.values()) if (v.clip) unregisterDeep(v.clip);
     for (const c of clip.__attached || []) unregisterDeep(c);
   }
+  /** 这个视图的根 `<svg>` 现在看得见吗（`display:none` / `visibility:hidden` 都算看不见）。
+   *  只给节拍器做"看不见就别走帧"的判据；量不到（测试环境没有 getComputedStyle）按可见处理。 */
+  function rootVisible(root) {
+    try {
+      if (!root) return false;
+      if (root.style && root.style.display === 'none') return false;
+      if (typeof getComputedStyle === 'function') {
+        const cs = getComputedStyle(root);
+        if (cs && (cs.display === 'none' || cs.visibility === 'hidden')) return false;
+      }
+    } catch (e) { /* 取不到样式就当可见，绝不因此冻住整页 */ }
+    return true;
+  }
   function startTicker(fps) {
     /* ⚠ 这里**不能**清注册表：mount 是先建完整棵实例树（全部注册）再启节拍的，
      * 第一版 startTicker 里调 stopTicker() 顺手 clear 了注册表，
@@ -673,6 +686,14 @@
         if (!view.root || !view.root.isConnected) {
           view.live.clear(); views.delete(view); continue;
         }
+        /* 【被盖住 / 被藏起来的页不用走帧】经典界面是"整页叠整页"：
+         * 进道具/状态/融合这些二级页时，底下的村庄页只是 `visibility:hidden`
+         * （classic.css 的 `#ui:has(.classic-page) .ssfight-home`），合成过场里
+         * 合成页自己也是 `display:none`。它们**看不见**，但以前照样每拍
+         * `showFrame()` 一整套子树 —— 手机上就是白白占掉主线程与光栅化。
+         * 可见性每 10 拍（≈0.7 s）复核一次：查得太勤反而自己制造样式重算。 */
+        if (view.__visible === undefined || tickCount % 10 === 0) view.__visible = rootVisible(view.root);
+        if (view.__visible === false) continue;
         for (const c of [...view.live]) {
           /* 被"钉住"的实例（装备持有者）：帧号由外面指定，不自己走。
            * 不钉住的话它会自由播放，每帧放出一个不同的挂点，装备就会在角色身上乱跳。 */

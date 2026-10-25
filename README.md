@@ -9,6 +9,7 @@
 
 **<https://charlespkuer.github.io/UC_Squirrel_Fight-ios-install/web/>**
 
+- 当前网页版版本：**1.1.0.1**（2026-10-26 由主仓源码重建；原生 1.1.0.1 只出未签名包，不再做企业签名）。
 - iPhone / iPad 用 **Safari** 打开 → 分享 → **添加到主屏幕**；先安装，再从游戏里
   「系统 → 导入存档」导入救援 JSON。
 - 主屏幕 Web App 和 Safari 标签页的存储是**两个容器**；先玩过 Safari 的话先在那边导出，再切过去导入。
