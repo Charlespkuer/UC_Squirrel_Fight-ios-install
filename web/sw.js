@@ -16,7 +16,7 @@
  * ============================================================ */
 'use strict';
 
-const VERSION = '1.1.0.1-c90d97c-mvo2y62z';
+const VERSION = '1.1.1-bfb6aa7-mvri0fcc';
 const CORE_CACHE = 'ssdz-core-' + VERSION;
 const RUNTIME_CACHE = 'ssdz-runtime-' + VERSION;
 const CORE = [

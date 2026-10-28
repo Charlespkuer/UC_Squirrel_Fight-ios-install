@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#173b2a">
-<title>松鼠大战 iOS 安装（暂停）· 先救存档</title>
+<title>松鼠大战 iOS 1.1.1 安装</title>
 <style>
   :root { color-scheme:light; --ink:#2f2418; --muted:#7d684c; }
   * { box-sizing:border-box; }
@@ -29,6 +29,7 @@
   .btn span { display:block; margin-top:3px; font-size:13px; opacity:.82; }
   .btn:active { transform:translateY(2px); box-shadow:inset 0 3px 0 #ffffffa0,0 3px 0 #72501a; }
   .rescue { color:#21370e; background:linear-gradient(#e9ffbf,#b8e77c 48%,#7cc447); border-color:#5d8d2c; }
+  .native { color:#3a2a12; background:linear-gradient(#fff6d6,#ffe49a 48%,#f5c04e); border-color:#9a6b2b; }
   .steps { margin:20px 0 0; padding:0 0 0 22px; color:#5f4a2d; font-size:14px; line-height:1.85; }
   .steps li { margin:0 0 8px; }
   .meta { margin-top:20px; padding-top:15px; border-top:2px dashed #d8c292; color:#7b6547; font-size:12px; line-height:1.8; }
@@ -50,45 +51,62 @@
 <div class="wrap">
   <div class="card">
     <div class="kicker">UC 松鼠大战 · iOS 安装</div>
-    <h1>暂停安装</h1>
-    <p class="sub">企业证书已被 Apple 吊销 · 旧包无法安装 / 启动<br>网页版 / PWA 已上线：不用证书，先救存档再导入</p>
+    <h1>1.1.1</h1>
+    <p class="sub">未签名 IPA 下载 · 网页版 / PWA 同步更新<br>企业证书仍被吊销，不再提供 OTA 直装；请用 TrollStore 或自签安装</p>
 
     <div class="alert">
-      <b>不要删除「松鼠大战」App！</b><br>
-      删除会把存档容器一起删掉。重新装同一个 IPA 也救不回来。
+      <b>1.1.0.1 用户可直接覆盖更新</b><br>
+      新包的构建号是 <b>1102</b>（1.1.0.1 是 1101），沿用同一个 Bundle ID
+      <code>com.ssdz.classic</code> 和同一签名身份安装，不会提示降版本。升级前仍建议先导出存档。
     </div>
 
     <div class="warn">
-      <b>发生了什么：</b>Apple 在 <b>2026-10-23 16:05 UTC</b> 把签名证书置为
-      <b>revoked（certificateHold）</b>。这不是「未受信任」，也不是描述文件到期；
-      重新信任、重启、覆盖安装同一个 IPA 都不会恢复。
+      <b>企业签名的旧包仍然无法安装：</b>Apple 已在 <b>2026-10-23 16:05 UTC</b> 把 RAKUTEN
+      企业证书置为 <b>revoked（certificateHold）</b>。本页提供的是<b>未签名</b> 1.1.1 包，
+      不能从 Safari 直接 OTA 安装，需要 TrollStore / Sideloadly / AltStore / 爱思助手等工具自签。
     </div>
 
-    <div class="warn">
-      <b>网页版 / PWA 已上线：</b>iPhone / iPad 用 <b>Safari</b> 打开网页版 → 分享 → <b>添加到主屏幕</b>；
-      先安装，再从游戏里「系统 → 导入存档」导入救援 JSON。主屏幕 Web App 和 Safari 的存储是隔离的，
-      先玩过 Safari 的话先在那边导出。不需要企业证书。
-    </div>
+    <a class="btn native" href="squirrel_fight_1.1.1_ios_unsigned.ipa">
+      <b>下载 iOS 26+ 版 IPA</b>
+      <span>1.1.1 · 构建 1102 · 未签名 · UIScene</span>
+    </a>
+    <a class="btn native" href="squirrel_fight_1.1.1_ios_legacy_unsigned.ipa">
+      <b>下载 iOS 15.4–25 版 IPA</b>
+      <span>1.1.1 · 构建 1102 · 未签名 · 传统生命周期</span>
+    </a>
 
     <a class="btn rescue" href="web/">
       <b>打开网页版 / PWA</b>
-      <span>不用证书 · 先添加到主屏幕，再导入存档</span>
+      <span>版本 1.1.1 · 不用证书 · 先添加到主屏幕，再导入存档</span>
     </a>
 
     <a class="btn rescue" href="rescue.html">
       <b>查看存档救援指南</b>
-      <span>先备份 / 取出旧版存档 · 再导入网页版</span>
+      <span>企业版 1.0.5 的旧存档仍在手机里 · 先备份再换包</span>
     </a>
 
     <ol class="steps">
-      <li><b>不要删 App</b>，也不要恢复手机出厂设置。</li>
-      <li>打开「文件」App → 我的 iPhone/iPad → 看有没有「松鼠大战」文件夹和导出的 <b>.json</b>；
-        有的话先拷到 iCloud 云盘 / 电脑。</li>
-      <li>没有导出过：借一台 Mac / Windows 电脑，按救援指南从 App 容器或本地备份里取
-        <code>progress.json</code>。</li>
-      <li>网页版现在已经可以导入：先按上面打开并添加到主屏幕，再在游戏里
-        <b>系统 → 导入存档</b> 导入。原生新包等后续。</li>
+      <li>按手机系统选包：<b>iOS 26 及以上</b>用第一个；<b>iOS 15.4–25</b>用第二个。</li>
+      <li>用 TrollStore 或电脑上的 Sideloadly / AltStore / 爱思助手安装；免费 Apple ID 自签
+        7 天有效，到期重签即可。</li>
+      <li>之前装过 1.1.0.1 的：<b>不要卸载</b>，用同一 Bundle ID、同一签名身份覆盖安装；
+        覆盖前先「系统 → 导出存档」。</li>
+      <li>之前装的是企业版 1.0.5 的：Bundle ID 不同（<code>jp.co.rakuten-sec.iSPEED...</code>），
+        存档容器不互通。先按救援指南取出 JSON，再在新版本「系统 → 导入存档」。</li>
+      <li>网页版 / PWA 与原生包是两套存储；先玩过 Safari 的话先在那边导出，再切到主屏幕 Web App 导入。</li>
     </ol>
+
+    <details>
+      <summary>1.1.1 包信息 / SHA-256</summary>
+      <p>
+        版本 <b>1.1.1</b> · 构建 <b>1102</b> · Bundle ID <code>com.ssdz.classic</code> · 未签名 ·
+        最低 iOS 15.4 · iPhone + iPad。<br><br>
+        <code>squirrel_fight_1.1.1_ios_unsigned.ipa</code><br>
+        SHA-256：<code>a65f83bca7e6dc3dcab85ffaa93d84be1bea1e14feec310e26c7fd2ed22acbbf</code><br><br>
+        <code>squirrel_fight_1.1.1_ios_legacy_unsigned.ipa</code><br>
+        SHA-256：<code>b20d45617ab76095c023a2d3e4fc9971daf3d03e5b1e7a111358835bf17db4b1</code>
+      </p>
+    </details>
 
     <details>
       <summary>旧版本信息（仅供核对，不要再用它安装）</summary>
@@ -103,13 +121,12 @@
     </details>
 
     <p class="meta">
-      网页版当前版本：<b>1.1.0.1</b>（2026-10-26 重建）。原生 1.1.0.1 只出未签名包，
-      不再提供企业签名包。<br>
-      安装包本身签名完整、GitHub 上的 IPA 与本地构建逐字节一致；问题在 Apple 吊销了企业证书，
-      不在打包。旧 IPA 仍保留在仓库里，只用于核对 / 提取存档，不要再用它安装。
+      当前版本：<b>1.1.1</b>（构建 1102）· 网页版 / PWA 同为 1.1.1。<br>
+      原生 1.1.1 只提供未签名包，不提供企业签名 / OTA 直装；旧 1.0.5 签名包仅留档，
+      不要再用它安装。安装包本身可正常解包，签名需由玩家用自己的 Apple ID 完成。
     </p>
   </div>
-  <p class="ios-hint">网页版必须用 iPhone / iPad 的 <b>Safari</b> 打开 · 救援脚本在电脑上运行</p>
+  <p class="ios-hint">原生 IPA 需要 <b>TrollStore / 电脑自签</b> 安装 · 网页版请用 iPhone / iPad 的 <b>Safari</b> 打开</p>
 </div>
 </body>
 </html>
