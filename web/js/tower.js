@@ -51,6 +51,10 @@
    * 以前登记时夹 0.8、进战斗时夹 0.6，介于两者之间的部分被静默浪费；
    * 现在三处（读档规范化 / 获得登记 / 进战斗取值）共用这一个值。 */
   const ENEMY_MAXHP_DOWN_CAP = 0.6;
+  /* 【2026-10-29 用户口径】勇者剧本第 1~5 层敌方属性略调低：只作用于勇者，
+   * 不改变常规无尽塔 / 经典模式的早期曲线。0.90 = 力 / 敏 / 速 / 生命各降 10%。 */
+  const HERO_EARLY_FOE_MUL = 0.90;
+  const HERO_EARLY_FOE_LAST_LAYER = 5;
 
   function debug(flag) { return typeof debugOn === 'function' && debugOn(flag); }
   /** 调试开关「试炼币不消耗」（2026-10 用户口径，取代原来那个没生效的「无尽试炼币拉满」）：
@@ -1543,6 +1547,38 @@
     run.limited = (run.limited || []).filter((b) => D().isBladeId(b.id) || b.uses > 0);
     bladeAfterBattle(run, out);
   }
+  /** 「下一场战斗后开店」类条目（E01 立即进货 / E16 铸币商队）。 */
+  function isPostBattleShopRow(row) {
+    const m = (D().BUFF_BY_ID[row && row.id] || {}).mods;
+    return !!(m && (m.postBattleShop || m.postBattleMintShop));
+  }
+  /** 【2026-11】幻影回响会把同一场**再打一遍**并提前 return（见 reportBattle 的回响分支），
+   *  开店那一支根本走不到；可这一场的限次已经被 consumeLimited 扣掉了 ——
+   *  表现就是「用了立即进货，碰上幻影回响，店被重打的三侠顶掉」。
+   *  做法：在扣限次**之前**把这类条目整行抄一份，回响分支里用 restoreShopCredits 放回去，
+   *  店就跟在「真正打完的那一场」后面开（限次仍然只算一次：这一场 + 回响重打，共扣一份）。 */
+  function snapshotShopCredits(run) {
+    return (run.limited || [])
+      .filter((b) => b && b.on !== false && Number(b.uses) > 0 && isPostBattleShopRow(b))
+      .map((b) => cloneRun(b));
+  }
+  function restoreShopCredits(run, rows) {
+    if (!rows || !rows.length) return 0;
+    run.limited = Array.isArray(run.limited) ? run.limited : [];
+    for (const snap of rows) {
+      let at = -1;
+      if (snap.uid != null) at = run.limited.findIndex((b) => b && b.uid != null && Number(b.uid) === Number(snap.uid));
+      if (at < 0) at = run.limited.findIndex((b) => b && b.id === snap.id);
+      if (at >= 0) run.limited[at] = snap;
+      else run.limited.push(snap);
+      /* 刚扣完次数时记的那条「用尽」是被回响顶掉的假记录，撤掉（调试流水只留真实的用尽）。 */
+      const log = Array.isArray(run.buffLog) ? run.buffLog : null;
+      if (log) for (let i = log.length - 1; i >= 0; i--) {
+        if (log[i] && log[i].id === snap.id && log[i].event === 'expire') { log.splice(i, 1); break; }
+      }
+    }
+    return rows.length;
+  }
   /**
    * 聚合当前生效的 buff 为本场战斗的修正。
    * foeCtx = {hero, poolNpc, elite}，用于「特定 NPC 触发」类乘区。
@@ -2547,6 +2583,21 @@
       }
       return { kind: 'inscription', id: cand.inscription, rowId: row.id };
     }
+    /* 限次增益的「一份」= 一次获得时给的场次（`def.uses`）。同名再获得会累加 uses，
+     * 所以一栏可能存着好几份。献祭时只吃一份场次，不再把整栏剩余场次全部吞掉；
+     * 剩余不足一份时才整栏移除（那已经不足一次献祭的份量）。 */
+    if (cand.kind === 'limited' && cand.stacks <= 1) {
+      const row = (run.limited || []).find((b) => b && Number(b.uid) === Number(cand.uid));
+      if (!row) return null;
+      const def = D().BUFF_BY_ID[row.id] || {};
+      const per = Math.max(1, Math.floor(Number(def.uses) || 1));
+      const left = Math.max(0, Math.floor(Number(row.uses) || 0));
+      if (left > per) {
+        row.uses = left - per;
+        row.on = true;
+        return { kind: 'limited', id: row.id, uses: row.uses, consumed: per, partial: true };
+      }
+    }
     /* 可叠加的只消耗一件（一层）；整栏只有 1 层 / 限次件则整栏移除。 */
     if (cand.stacks > 1) {
       const row = cand.kind === 'permanent'
@@ -2849,6 +2900,14 @@
      * 判定与进层那次共用同一份（`TowerPlot.due`，见 autoPlayStory），不会出现两种口径。 */
     if (mode === 'endless' && !previewRun) autoPlayStory(run);
     const built = buildFoe(mode, run.layer, entry, run.salt, isLastBattle);
+    /* 勇者剧本 1~5 层：敌人面板整体收一档（用户 2026-10-29 口径）。
+     * 放在 buildFoe 之后、所有敌方削弱（E07/E11 / 威慑）之前，乘区顺序不影响结果。 */
+    if (isHeroRun(run) && Math.max(1, Math.floor(Number(run.layer) || 1)) <= HERO_EARLY_FOE_LAST_LAYER) {
+      const foe = built.foe;
+      for (const key of ['power', 'agility', 'speed', 'hp']) {
+        foe[key] = Math.max(1, Math.round((Number(foe[key]) || 1) * HERO_EARLY_FOE_MUL));
+      }
+    }
     const foeCtx = { hero: entry.kind === 'hero', poolNpc: built.poolNpc, elite: built.elite };
     const agg = aggregate(run, foeCtx);
     /* 隐藏成就「超凡入圣」：本场聚合出来的 buff 加成（不含装备/等级）跨过阈值就记一次。 */
@@ -3151,6 +3210,13 @@
           /* x00「最后的魔王」的固定持有（两件涅槃plus + 两件破碎终焉烙印）放在**最后**：
            * 终乘要把前面「面板复制 + 上交增益」的结果一起放大。 */
           applyDemonLordLives(foe);
+        } else {
+          /* 寻常「巡视」层的魔王也加强为**两条命**：第二条命只回 75% 生命上限；
+           * 不吃 x00 的 +20% 上限 / 减伤，也不吃破碎终焉烙印。 */
+          const P = D().PATROL || {};
+          applyDemonLordLives(foe, { lives: Number(P.patrolLives) || 1,
+            healPct: P.patrolLifeHealPct == null ? 0.75 : P.patrolLifeHealPct,
+            maxHpMul: 0, takenMul: 0, brands: 0, perBrand: 0 });
         }
         /* 【渴血之剑·王者之剑】对「镜」的额外克制：只有最终形态才生效。
          * 玩家可以把它关掉（on=false），关掉时不削弱敌人；层数越高削得越多。 */
@@ -3412,7 +3478,12 @@
       out.heroGrowth = TowerHero.grow(run.hero, { layer: battleLayer, elite: isElite, patrol: entry.kind === 'patrol',
         lastBattle: wasLastBattle });
       run.baseMaxHp = heroBaseHp(run);
-      run.carry = clamp01(run.hpAbs / Math.max(1, currentMaxHp(run)));
+      /* 【2026-10-29 用户口径】勇者每打完一场，按**休息期血量上限**的 5% 回血。
+       * 结算顺序：先做本场成长（可能抬上限）→ 再用新的上限算休息回血 →
+       * 最后把 carry 写回，下一场进场血量就是回血后的值。 */
+      const restMax = currentMaxHp(run);
+      out.heroRestHeal = healAbs(run, 0.05, restMax);
+      run.carry = clamp01(run.hpAbs / Math.max(1, restMax));
     }
     if (stacksOf(run, 'C14') && result && Array.isArray(result.rounds)) {
       const revives = result.rounds.filter((r) => r.deathSave && r.revive).length;
@@ -3580,6 +3651,9 @@
     const shopCreditPct = activeShopCredit(run);
     const mintCredit = activePostBattleMintShop(run);
     const layerRestart = hasActiveLayerRestart(run);
+    /* 【2026-11】把「下一场战斗后开店」的条目整行记一份：幻影回响会让这一场提前 return，
+     * 开店那一支走不到，限次却被扣掉了（见 snapshotShopCredits 的说明）。 */
+    const shopCreditRows = snapshotShopCredits(run);
     consumeLimited(run, out);
     consumeEventRegen(run);
     const brokenFragile = rollFragileBuffs(run);
@@ -3642,7 +3716,12 @@
         Math.random() < echoP) {
       run.idx--;                                  // 回退一格 → 下一场还是这一场
       run.repeatAt = echoBattleKey;               // 记下「这一场已经触发过」
+      /* 【2026-11 用户口径】立即进货 / 铸币商队是「下一场战斗**之后**开店」：这一场虽然
+       * 已经扣了限次，店却还没开出来 —— 直接被回响提前 return 顶掉就等于白扣。
+       * 把扣次数前抄下的那份放回去，回响重打的那一场打完照常开店（限次仍只算一次）。 */
+      const keptCredit = restoreShopCredits(run, shopCreditRows);
       out.repeat = { chance: echoP, name: (echoDef() || {}).name || '幻影回响', layer: run.layer, battleNo: run.idx + 1 };
+      if (keptCredit > 0) out.repeat.shopCreditKept = keptCredit;
       run.repeatCount = Math.max(0, Number(run.repeatCount) || 0) + 1;
       save();
       return out;
@@ -5065,9 +5144,21 @@
     row.fragileSeed = st;
     return (st / 4294967296) * 100 < pct;
   }
+  /** 【2026-10-28 用户口径】烙印碎裂时飘一条过程提示：「XX烙印已融入身躯」。
+   *  走 `run.pendingToasts`（字符串队列）—— 界面在 `openEndless()` 重画时统一 `flushRunToasts()`，
+   *  所以战斗后 / 开完店 / 选完铭文回来都会看到，且与剧情屏不打架（剧情屏不飘）。
+   *  三条碎裂路径（易碎判定 / 碎裂铭文 C61 / 烙印升华 E20）都走 breakOneFragileCopy，这里只排一次。 */
+  function queueBrandBreakToast(run, def) {
+    if (!run || !def) return;
+    const name = String(def.name || '烙印');
+    /* 名字里已经带「烙印」就不重复拼（「力量烙印·精」这种后缀也要照原名显示）。 */
+    const label = /烙印/.test(name) ? name : name + '烙印';
+    run.pendingToasts = (run.pendingToasts || []).concat([label + '已融入身躯']).slice(-12);
+  }
   /** 结算一条「碎裂烙印」的一份：把存在值转成损毁值（明细 / 合计 / 层数一起更新）。
    *  【2026-10 同名逐条】每**一份**各摇各的：一份碎了只掉那一份（层数 −1），全碎才移除整栏。 */
   function breakOneFragileCopy(run, def, row) {
+    queueBrandBreakToast(run, def);
     if (def.mods.fragileStat) {
       /* 属性烙印：破碎 = 把这一份从「存在值」换成「损毁值」——
        * 存在那份（fragilePct）从 base 里收回，损毁那份（fragileBurnedPct）记进 burned。 */
@@ -5489,24 +5580,30 @@
     foe.tollBuffs = names;
     return n;
   }
-  /** x00「最后的魔王」额外固定持有的两件**涅槃plus** + 两件**已破碎的终焉烙印**
-   *（2026-10 第八十二批用户口径；只给 x00，寻常巡逻层那只不额外持有）。
+  /** 魔王额外命数 + x00 固定持有。
    *
-   *  · 涅槃plus：`deathSaves` 里两条带 `bossLife: true` 的条目 —— 死亡时回满血（100% 生命上限），
-   *    并**当场**生命上限 +20%、受到伤害 −15%；第二件触发时这两项叠加（上限 +40%、减伤 30%）。
-   *    触发逻辑在 sim 的 `consumeDeathSave`（先抬上限、再按 healPct 回血、减伤并进 mods.takenMul）。
+   *  · x00「最后的魔王」默认两件**涅槃plus**：`deathSaves` 里两条带 `bossLife: true` 的条目 ——
+   *    死亡时回满血（100% 生命上限），并**当场**生命上限 +20%、受到伤害 −15%；
+   *    第二件触发时这两项叠加（上限 +40%、减伤 30%）。于是它一共 **3 条命**。
+   *  · 寻常「巡视」层那只通过 opts 传 1 条命 / 75% 回血：一共 **2 条命**，不叠 x00 的
+   *    上限与减伤，也不吃破碎终焉烙印。
+   *  · 触发逻辑在 sim 的 `consumeDeathSave`（先抬上限、再按 healPct 回血、减伤并进 mods.takenMul）。
    *    `bossLife` 还有一层作用：**「假如我直接赢」（E17）只吃掉一条命**（见 sim 的 openKill 分支）——
    *    普通敌人的装死 / 涅槃照旧被 E17 无视，只有魔王的命算数。
-   *    于是它一共 **3 条命**（本体 + 两件涅槃plus）。
-   *  · 两件破碎的终焉烙印：终乘 ×(1 + 0.30×2) = **×1.6** 乘进力/敏/速/生命上限，
+   *  · 两件破碎的终焉烙印（只给 x00）：终乘 ×(1 + 0.30×2) = **×1.6** 乘进力/敏/速/生命上限，
    *    与玩家侧 `fragileFinalMul` 同一套口径（存在 +20%/层、损毁 +30%/层，按层加算）。
    *    放在**最后**乘：前面的面板复制与「玩家上交过的增益」都算完之后再终乘。 */
-  function applyDemonLordLives(foe) {
+  function applyDemonLordLives(foe, opts) {
     if (!foe) return null;
     const P = D().PATROL || {};
-    const lives = Math.max(0, Math.floor(Number(P.bossLives) || 0));
-    const brands = Math.max(0, Math.floor(Number(P.bossBrokenBrands) || 0));
-    const perBrand = Math.max(0, Number(P.bossBrokenFinal) || 0);
+    const O = opts || {};
+    const num = (v, fallback) => (v == null || !Number.isFinite(Number(v))) ? fallback : Number(v);
+    const lives = Math.max(0, Math.floor(num(O.lives, P.bossLives) || 0));
+    const brands = Math.max(0, Math.floor(num(O.brands, P.bossBrokenBrands) || 0));
+    const perBrand = Math.max(0, num(O.perBrand, P.bossBrokenFinal) || 0);
+    const healPct = Math.max(0, num(O.healPct, P.bossLifeHealPct) || 1);
+    const lifeMaxHpMul = Math.max(0, num(O.maxHpMul, P.bossLifeMaxHpMul) || 0);
+    const lifeTakenMul = num(O.takenMul, P.bossLifeTakenMul) || 0;
     foe.mods = Object.assign({}, foe.mods || {});
     /* 命数**直接摆回设计值**（不是无脑追加）：
      *   · 保证幂等 —— adjustMe 被调两次不会变 4 条命；
@@ -5514,9 +5611,9 @@
      *   · 只保留非 bossLife 的免死条目（例如上交增益带来的），别把别人的命删了。 */
     if (lives > 0) {
       const one = () => ({
-        healPct: Math.max(0, Number(P.bossLifeHealPct) || 1),
-        maxHpMul: Math.max(0, Number(P.bossLifeMaxHpMul) || 0),
-        takenMul: Number(P.bossLifeTakenMul) || 0,
+        healPct: healPct,
+        maxHpMul: lifeMaxHpMul,
+        takenMul: lifeTakenMul,
         revive: true, bossLife: true, name: '涅槃+',
       });
       const list = [];
