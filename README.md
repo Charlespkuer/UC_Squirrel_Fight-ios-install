@@ -1,49 +1,49 @@
-# 松鼠大战 iOS 安装包（1.1.2 · 未签名 IPA + 网页版）
+# 松鼠大战 iOS 安装包（1.1.3 · 未签名 IPA + 网页版）
 
 > **2026-10-23：RAKUTEN 企业证书已被 Apple 吊销（revoked / certificateHold），不再提供 OTA 直装。**
-> 现在发布 **1.1.2 未签名 IPA**（构建 1103），可用 TrollStore 或 Sideloadly / AltStore / 爱思助手
-> 自签安装；网页版 / PWA 也已同步到 1.1.2。
+> 现在发布 **1.1.3 未签名 IPA**（构建 1104），可用 TrollStore 或 Sideloadly / AltStore / 爱思助手
+> 自签安装；网页版 / PWA 也已同步到 1.1.3。
 > **已安装旧企业版的玩家请不要删除 App**，先按
 > [存档救援指南](https://charlespkuer.github.io/UC_Squirrel_Fight-ios-install/rescue.html)
 > 把存档取出来。删除 App 会连存档容器一起删除。
 
-## 1.1.2 更新内容（iOS）
+## 1.1.3 更新内容
 
-- 修复 iOS 切后台再回前台时背景消失：补画 canvas、重解码经典 SVG 位图、重绘 CSS 底板。
-- 修复无尽塔结算页底部操作按钮不固定：战报正文单独滚动，底部按钮固定在面板底部。
-- 已在 **iOS 27.1 模拟器（iPhone Duo，横屏）** 实测：启动、切后台/回前台、无尽塔战报与滚动均正常。
+- 天梯赛改为 **6 赛区制**：赛区内人机、周一积分减半、赛区前 30 名周奖。
+- 经典金杯商店翻页键避开价格；安卓短屏赛区页按钮修复。
+- 无尽塔跳过键下放到第 10 层。
+- 已在 **iOS 27.1 模拟器（iPhone Duo，横屏）** 安装 1.1.3 构建，实测启动、系统页 v1.1.3、切后台/回前台背景保持、无尽塔战报滚动与底部按钮固定均正常。
 
-## 1.1.2 未签名 IPA（推荐 TrollStore / 自签）
+## 1.1.3 未签名 IPA（推荐 TrollStore / 自签）
 
 | 包 | 适用 | 版本 / 构建 |
 |---|---|---|
-| [`squirrel_fight_1.1.2_ios_unsigned.ipa`](squirrel_fight_1.1.2_ios_unsigned.ipa) | iOS 26+（UIScene） | 1.1.2 / 1103 |
-| [`squirrel_fight_1.1.2_ios_legacy_unsigned.ipa`](squirrel_fight_1.1.2_ios_legacy_unsigned.ipa) | iOS 15.4–25（传统生命周期） | 1.1.2 / 1103 |
+| [`squirrel_fight_1.1.3_ios_unsigned.ipa`](squirrel_fight_1.1.3_ios_unsigned.ipa) | iOS 26+（UIScene） | 1.1.3 / 1104 |
+| [`squirrel_fight_1.1.3_ios_legacy_unsigned.ipa`](squirrel_fight_1.1.3_ios_legacy_unsigned.ipa) | iOS 15.4–25（传统生命周期） | 1.1.3 / 1104 |
 
 - Bundle ID：`com.ssdz.classic`；未签名；最低 iOS 15.4；iPhone + iPad；仅横屏。
-- **1.1.1 / 1.1.0.1 用户**：旧包构建号 1102 / 1101，新包 **1103**；只要沿用同一个 Bundle ID
-  和同一签名身份覆盖安装，就不会提示降版本。升级前建议先在「系统 → 导出存档」备份。
+- **1.1.2 / 1.1.1 / 1.1.0.1 用户**：旧包构建号 1103 / 1102 / 1101，新包 **1104**；只要沿用同一个
+  Bundle ID 和同一签名身份覆盖安装，就不会提示降版本。升级前建议先在「系统 → 导出存档」备份。
 - **1.0.5 企业版用户**：企业包 Bundle ID 是 `jp.co.rakuten-sec.iSPEED...`，与未签名包
   `com.ssdz.classic` 不是同一个 App，存档容器不互通；必须按救援指南取出 JSON 后导入新版本。
 - 未签名 IPA **不能**从 Safari 直接 OTA 安装；需要用 TrollStore 或电脑侧载工具。
   免费 Apple ID 自签 7 天有效，到期重签，不需要开发者账号。
 - SHA-256：
-  - modern：`76c448782e8129b3cdf18ec015febe8de9aee3046199a2141c3c75877fbacae2`
-  - legacy：`6acc3ef9143e0d7a665350020cc08adf6f76c0df95023e6f079758c96f94e2f6`
+  - modern：`2aac1f3ee21ed3f31dafc453fa3f5aacaa8aae18835db61441a2e2fb2a50a7d0`
+  - legacy：`d12f2b47f4a68501201c253c4ac44175b635ede2a27f2529809981e046268560`
 
-## 上一个版本：1.1.1（构建 1102，仍可下载）
+## 上一个版本：1.1.2（构建 1103，仍可下载）
 
-- [iOS 26+](squirrel_fight_1.1.1_ios_unsigned.ipa) ·
-  [iOS 15.4–25](squirrel_fight_1.1.1_ios_legacy_unsigned.ipa)
-- SHA-256：`a65f83bca7e6dc3dcab85ffaa93d84be1bea1e14feec310e26c7fd2ed22acbbf` /
-  `b20d45617ab76095c023a2d3e4fc9971daf3d03e5b1e7a111358835bf17db4b1`
-- 1.1.1 未包含本轮的 iOS 切后台背景 / 战报底部按钮修复，建议升级到 1.1.2。
+- [iOS 26+](squirrel_fight_1.1.2_ios_unsigned.ipa) ·
+  [iOS 15.4–25](squirrel_fight_1.1.2_ios_legacy_unsigned.ipa)
+- SHA-256：`76c448782e8129b3cdf18ec015febe8de9aee3046199a2141c3c75877fbacae2` /
+  `6acc3ef9143e0d7a665350020cc08adf6f76c0df95023e6f079758c96f94e2f6`
 
 ## 网页版 / PWA（不用证书）
 
 **<https://charlespkuer.github.io/UC_Squirrel_Fight-ios-install/web/>**
 
-- 当前网页版版本：**1.1.2**（由主仓当前源码重建）。
+- 当前网页版版本：**1.1.3**（由主仓当前源码重建）。
 - iPhone / iPad 用 **Safari** 打开 → 分享 → **添加到主屏幕**；先安装，再从游戏里
   「系统 → 导入存档」导入救援 JSON。
 - 主屏幕 Web App 和 Safari 标签页的存储是**两个容器**；先玩过 Safari 的话先在那边导出，再切过去导入。
@@ -91,11 +91,11 @@ SHA-256 逐字节一致；问题不在打包，在 Apple 吊销了证书。
 
 | 文件 | 作用 |
 |---|---|
-| `index.html` | 1.1.2 安装 / 下载页 |
-| `squirrel_fight_1.1.2_ios_unsigned.ipa` | iOS 26+ 未签名包（构建 1103） |
-| `squirrel_fight_1.1.2_ios_legacy_unsigned.ipa` | iOS 15.4–25 未签名包（构建 1103） |
-| `squirrel_fight_1.1.1_ios_*_unsigned.ipa` | 上一版未签名包（构建 1102，保留回滚） |
-| `web/` | 网页版 / PWA 静态站点（1.1.2，本仓库 Pages 托管） |
+| `index.html` | 1.1.3 安装 / 下载页 |
+| `squirrel_fight_1.1.3_ios_unsigned.ipa` | iOS 26+ 未签名包（构建 1104） |
+| `squirrel_fight_1.1.3_ios_legacy_unsigned.ipa` | iOS 15.4–25 未签名包（构建 1104） |
+| `squirrel_fight_1.1.2_ios_*_unsigned.ipa` | 上一版未签名包（构建 1103，保留回滚） |
+| `web/` | 网页版 / PWA 静态站点（1.1.3，本仓库 Pages 托管） |
 | `web-src/` | PWA 源文件、web-mode.patch、重建脚本 |
 | `rescue.html` | 玩家存档救援指南 |
 | `rescue/ios-save-rescue.cjs` | 从 `.xcappdata` / Finder 备份 / 单文件提取存档 |

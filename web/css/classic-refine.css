@@ -592,6 +592,13 @@ html[data-ui-mode="classic"] .classic-page.classic-tower,
 .bag-actions .uc-button{align-self:auto}
 .bag-detail .uc-button{align-self:center;font-size:29px;min-height:46px;height:48px;padding:2px 25px;flex-shrink:0}
 .classic-bag-board .page-arrow.bag-next{left:648px;right:auto}
+/* 金杯商店（经典模式）的六格售价一直排到格子最右/最左，648/8px 的翻页键会压住
+ * 最外侧那列的价格（第 2~4 页的 1000/2000 最明显）。用户 2026-11-02 口径：
+ * 只把这一页的左翻页键再往左、右翻页键再往右挪一点，其它背包/商店页不动。
+ * 左键用 -5px：再往左会被面板圆角裁掉（用户反馈“没显示全”）；右键停在详情文字
+ * 左缘（672px），再往右就会压住详情栏文字。 */
+.classic-bag-board.rank-shop-board .page-arrow.prev{left:-5px}
+.classic-bag-board.rank-shop-board .page-arrow.bag-next{left:672px}
 .attribute-allocation{display:flex;justify-content:center;gap:32px;margin:24px 0}.attribute-allocation label{display:flex;flex-direction:column;gap:10px;color:#795329}.attribute-allocation input{width:130px;padding:10px;border:3px solid #c19b59;border-radius:14px;background:#fff8db;color:#73441a;text-align:center;font:32px Georgia,serif;user-select:text}.allocation-remaining{text-align:center;color:#836120}
 .status-buttons{justify-content:flex-start}.status-buttons .uc-button{flex:none;width:279px;height:100px;font-size:38px}.status-buttons [data-action="merge"]{display:none}
 /* 状态页下角的「装备出售 / 装备融合」入口（第 1、2 项）：同一套金色胶囊样式，
@@ -1229,7 +1236,12 @@ html[data-ui-mode="classic"] .classic-page.classic-tower,
 /* ===== 新手引导（ssfight 3625）=====
  * 原版是整页提示层：暗色说明条 + 黄色手指 + 半透明目标示意。它只负责“讲”，
  * 不接管点击，所以整层 pointer-events:none；z-index 压在页面之上、战果/弹窗之下。 */
-#ui>.sf-guide-view{position:absolute;inset:0;z-index:15;pointer-events:none;overflow:hidden}
+#ui>.sf-guide-view{position:absolute;inset:0;z-index:15;pointer-events:none;overflow:visible}
+/* 金环要能画到 320×196 的素材 viewBox 之外：f10 的「返回菜单」在页面最底部，
+ * 环的 padding 会伸到 viewBox 下面；SVG 默认 overflow:hidden 会把底边裁掉，
+ * 看起来就是「框歪了、没框住」。父层和 svg 都放开，实际范围由 ui-guide.js
+ * 按窗口可见区夹住（1.5px 内缩，保证描边仍在屏内）。 */
+#ui>.sf-guide-view>svg{overflow:visible}
 /* ⚠ 只给父层写 pointer-events:none 在 iOS 15 的 WKWebView 上不够可靠：它不一定把
  *   none 继承进 SVG 子树。引导的黄色手指与金环正好压在「开始挑战」上，真机上就变成
  *   “体力条（DOM）有反应、开始挑战（SVG）点不动”。引导层与同类“只负责展示、必须

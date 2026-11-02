@@ -175,13 +175,35 @@
       if (rings.has(key)) return;
       rings.add(key);
       const pad = Math.max(1.5, Math.min(4, box.h * 0.08));
+      /* 目标贴着屏幕底边时（f10 的「返回菜单」就在页面最底部），金环的 padding
+       * 会伸出 SVG viewBox 的 320×196，被默认的 overflow:hidden 裁掉一条底边 ——
+       * Windows 上看到的就是「框歪了、没框住返回菜单」。这里把矩形夹在当前窗口的
+       * 可见范围里（留 1.5 屏幕像素给描边），并让引导层允许画到 viewBox 之外
+       * （见 css/classic-refine.css 的 .sf-guide-view / svg overflow:visible）。 */
+      let vw = 0, vh = 0;
+      try {
+        vw = Math.max(0, Number(window.innerWidth) || 0);
+        vh = Math.max(0, Number(window.innerHeight) || 0);
+      } catch (e) {}
+      let x = box.x - pad, y = box.y - pad, w = box.w + pad * 2, h = box.h + pad * 2;
+      if (vw > 1 && vh > 1) {
+        const vp1 = toPoint(0, 0), vp2 = toPoint(vw, vh);
+        const insetX = 1.5 / (map.scaleX || 1), insetY = 1.5 / (map.scaleY || 1);
+        const minX = Math.min(vp1.x, vp2.x) + insetX, maxX = Math.max(vp1.x, vp2.x) - insetX;
+        const minY = Math.min(vp1.y, vp2.y) + insetY, maxY = Math.max(vp1.y, vp2.y) - insetY;
+        if (x < minX) { w -= minX - x; x = minX; }
+        if (y < minY) { h -= minY - y; y = minY; }
+        if (x + w > maxX) w = maxX - x;
+        if (y + h > maxY) h = maxY - y;
+        if (!(w > 1) || !(h > 1)) return;       // 目标整个在屏外：宁可不画，也不要画一条残边
+      }
       const ring = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       ring.setAttribute('class', 'sf-guide-target');
-      ring.setAttribute('x', (box.x - pad).toFixed(2));
-      ring.setAttribute('y', (box.y - pad).toFixed(2));
-      ring.setAttribute('width', (box.w + pad * 2).toFixed(2));
-      ring.setAttribute('height', (box.h + pad * 2).toFixed(2));
-      ring.setAttribute('rx', Math.max(2, Math.min(10, (box.h + pad * 2) / 2)).toFixed(2));
+      ring.setAttribute('x', x.toFixed(2));
+      ring.setAttribute('y', y.toFixed(2));
+      ring.setAttribute('width', w.toFixed(2));
+      ring.setAttribute('height', h.toFixed(2));
+      ring.setAttribute('rx', Math.max(2, Math.min(10, h / 2)).toFixed(2));
       ring.setAttribute('fill', 'rgba(255,237,120,.20)');
       ring.setAttribute('stroke', '#ffe45c');
       ring.setAttribute('stroke-width', '1.6');
@@ -224,14 +246,14 @@
       const domOf = DOM_TARGETS[stepNo];
       if (domOf) {
         const el = domOf();
-        if (el && el.isConnected) {
+        if (el && el.isConnected && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0) {
           const ir = el.getBoundingClientRect();
           moveHand(ir);
           addRing(ir, 0);
           return;
         }
         if (tries++ < 12) { setTimeout(paint, 120); return; }
-        if (stepNo === 8 || stepNo === 9) return;
+        if (stepNo === 8 || stepNo === 9 || stepNo === 10) return;
       }
       /* 首页：把烘焙手指/金环钉到真实菜单按钮（安卓 letterbox 下烘焙位置会歪）。
        * 引导常常比首页 SVG 先挂上（尤其安卓），按钮还没出来就等一会儿再量。 */
@@ -252,6 +274,8 @@
       });
     };
     paint();
+    /* 页面重绘或移动端布局调整可能发生在首次测量之后。重新读取真实按钮位置。 */
+    if (stepNo === 10) setTimeout(() => { if (svg.isConnected) paint(); }, 300);
   }
 
   function freeze(view) {

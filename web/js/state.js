@@ -62,12 +62,14 @@
    * 装备主属性、被动技能、套装、药丸状态、幻兽是对战斗面板的外部加成，不占这 651 点预算。
    * 它必须**高于所有正常产出**（包括旧属性书/转生记录），但任何来源——含调试——都不能越过。 */
   const STAT_HARD_CAP = 651;
-  /* 四项平衡的份额口径：生命按 HP_PER_STAT 点折算成 1 点属性。
-   * 自然成长到 15 级时三项约 14.6、生命约 145，折算后四项刚好各占约 25%，
-   * 所以「平均份额」= 25%，门槛取它的八成（20%）：某一项被压到平均的
-   * 80% 以下时必须先补它，由系统直接代选（转化丸的「占比过低」是另一种口径）。 */
-  const HP_PER_STAT = 10;
-  const STAT_SHARE_MIN = 0.20;
+  /* 生命 5 点 = 1 点（总属性 / 651 上限 / 平均分配同一口径）。
+   * **生命不参与三项占比**：原版 SSFight 的权重只约束力/敏/速。 */
+  const HP_PER_STAT = 5;
+  /* 原版 SSFight 的转化丸口径：力/敏/速任一项低于三项总和的 **25%** 时不能用。
+   * 本作把这套「三项权重」用于升级系统分配与特殊自由点；生命另有等级×9 的
+   * 消耗门槛（原版道具 14/18），不进入这个占比。 */
+  const SHARE_KEYS = ['power', 'agility', 'speed'];
+  const STAT_SHARE_MIN = 0.25;
   /* 画面分辨率档位：'auto' 跟随窗口，其余按「设计基准高度」等比缩放并居中
    * （设计尺寸是 1170×690）。窗口装不下时自动按窗口缩小，不会溢出屏幕。 */
   const RESOLUTIONS = [
@@ -166,6 +168,12 @@
     next.energy = Math.min(ENERGY_HARD_CAP, next.energy);
     next.integral = next.integral == null ? null : integer(next.integral, 0);
     next.rankCupClaimWeek = typeof raw.rankCupClaimWeek === 'string' ? raw.rankCupClaimWeek : '';
+    /* 天梯赛区 / 周重置 / 赛区人机（2026-11）：本周标识、本周场次、人机名册。 */
+    next.rankWeek = typeof raw.rankWeek === 'string' ? raw.rankWeek : '';
+    next.rankWeekMatches = Math.max(0, integer(raw.rankWeekMatches, 0));
+    next.rankWins = Math.max(0, integer(raw.rankWins, 0));
+    next.rankLosses = Math.max(0, integer(raw.rankLosses, 0));
+    next.rankBots = normalizeRankBots(raw.rankBots);
     /* 天梯商店购买次数：两本账都只收「数字 key → 非负整数」。
      * `rankPurchases` 是按周的；`rankPurchaseTotals` 是账号累计（永久属性丸限购）。 */
     next.rankPurchases = (() => {
@@ -2153,7 +2161,7 @@
   /* ---------- 「战斗操作键」的解锁等级（2026-10 用户口径） ----------
    * 10 级解锁 2 倍速；跳过按超级松鼠页的描述：**开通超级松鼠后 10 级**即可，
    * 非 VIP 仍是 20 级（不再一刀切 20）。挑战塔 / 无尽塔本身要 30 级才开，
-   * 塔的「跳过」另有一条层数门槛：无尽塔 20 层起，见 Tower.skipPlaybackAllowed。 */
+   * 塔的「跳过」另有一条层数门槛：无尽塔 10 层起，见 Tower.skipPlaybackAllowed。 */
   const SPEED_UNLOCK_LEVEL = 10;
   const SKIP_UNLOCK_LEVEL = 20;
   const VIP_SKIP_UNLOCK_LEVEL = 10;
@@ -3989,34 +3997,40 @@
   }
 
   /* ============================================================
-   * 【S13】自由属性点（升级自选，失衡代选）
+   * 【S13】特殊自由属性点（金宝箱等，升级不再发放）
    * ============================================================ */
-  // ---------- 自由属性点（升级自选，四项平衡，占比过低由系统代选） ----------
-  /** 某一项按「属性点」口径的份额（生命 10 点折算 1 点）。 */
+  // ---------- 特殊自由属性点（三项 25% 保底；生命不参与三项占比） ----------
+  /** 某一项按「属性点」口径的数值（生命 5 点折算 1 点）。 */
   function statPoints(source, key) {
     const s = object(source) ? source : S;
     const raw = Math.max(0, Number(s && s[STAT_FIELDS[key]]) || 0);
     return key === 'hp' ? raw / HP_PER_STAT : raw;
   }
-  /** 力/敏/速/生命四项的占比（自然成长时各约 25%）。 */
+  /** 力/敏/速三项的占比；生命不进入原版权重口径。 */
   function statShares(source) {
+    const s = object(source) ? source : S;
     let total = 0;
-    for (const key of STAT_KEYS) total += statPoints(source, key);
+    const raw = {};
+    for (const key of SHARE_KEYS) {
+      raw[key] = Math.max(0, Number(s && s[STAT_FIELDS[key]]) || 0);
+      total += raw[key];
+    }
     const out = {};
-    for (const key of STAT_KEYS) out[key] = total > 0 ? statPoints(source, key) / total : 1 / STAT_KEYS.length;
+    for (const key of SHARE_KEYS) out[key] = total > 0 ? raw[key] / total : 1 / SHARE_KEYS.length;
     return out;
   }
-  /** 占比低于 STAT_SHARE_MIN 的属性里最低的那一项；四项都达标时返回 null。 */
+  /** 占比低于 25% 的力/敏/速里最低的那一项；三项都达标时返回 null。 */
   function forcedStat(source) {
     const shares = statShares(source);
-    const low = STAT_KEYS.filter((key) => shares[key] < STAT_SHARE_MIN - 1e-9);
+    const low = SHARE_KEYS.filter((key) => shares[key] < STAT_SHARE_MIN - 1e-9);
     if (!low.length) return null;
     return low.reduce((a, b) => (shares[b] < shares[a] ? b : a));
   }
-  /** 占比最低的那一项（不管有没有过低）。 */
+  /** 四项里数值最低的一项（生命按 5 点折算），用于「平均分配」与 AI 自选。 */
   function lowestStat(source) {
-    const shares = statShares(source);
-    return STAT_KEYS.reduce((a, b) => (shares[b] < shares[a] ? b : a));
+    const vals = {};
+    for (const key of STAT_KEYS) vals[key] = statPoints(source, key);
+    return STAT_KEYS.reduce((a, b) => (vals[b] < vals[a] ? b : a));
   }
   /** 把一点加到某一项上（生命一点 = 5 点血）。 */
   function grantPoint(target) {
@@ -4025,12 +4039,12 @@
     S[STAT_FIELDS[target]] += STAT_GAIN[target];
     return true;
   }
-  /** 还没分配的自由属性点：升级时就该选掉，这里只是「弹窗还没点完」的计数。 */
+  /** 还没分配的特殊自由属性点（金宝箱等；升级不再发放）。 */
   function pendingPoints() { return Math.max(0, integer(S && S.freePoints, 0)); }
   /**
-   * 分配一点自由属性点（力/敏/速各 +1，生命 +5）。
-   * 占比过低的属性必须优先补：requested 不是它时系统直接代选，
-   * 返回值里 redirected=true 供界面提示，规则不靠界面自觉。
+   * 分配一点特殊自由属性点（力/敏/速各 +1，生命 +5）。
+   * 力/敏/速占比低于 25% 时必须优先补：requested 不是它时系统直接代选，
+   * 返回值里 redirected=true 供界面提示，规则不靠界面自觉。生命不参与三项占比。
    */
   function allocatePoint(attr) {
     if (pendingPoints() <= 0) return { ok: false, msg: '没有待分配的自由属性点' };
@@ -4158,7 +4172,7 @@
       /* 到 30 级：埋一个一次性的「自愿支持作者」提示（界面在升级奖励处理完之后才弹，
        * 不会打断三选一 / 属性点流程；见 classic-ui 的 maybeSupportPrompt）。 */
       if (S.level >= SUPPORT_PROMPT_LEVEL) S.supportPrompt = true;
-      /* 1~90 级统一成长：每级 2 点随机 + 1 点自选（合计 3 属性）+ 5 生命。
+      /* 1~90 级统一成长：每级 2 点随机 + 1 点系统分配（合计 3 属性）+ 5 生命。
        * 原版 `MainMovie.as:19620` 的 maxLevel = 90；71~90 级原版只发 1 个金宝箱、
        * 不再加属性（`showReward` 在 level > 70 时提前 return）。本版保留这 20 级的成长手感，
        * 代价是金宝箱单箱上限从 16 点压到 12 点 —— 20×12 = 240，正好等于
@@ -4170,14 +4184,18 @@
       }
       const { power: pw, agility: ag, speed: sp, hp } = growth;
       S.power += pw; S.agility += ag; S.speed += sp; S.maxHp += hp;
-      // 第 3 点由玩家在升级弹窗里自选（力/敏/速/生命）；某一项占比过低时由系统代选
-      let freePoint = 0, autoPoint = null;
+      /* 第 3 点**全部由系统分配**（2026-11 用户口径）：不再发升级自由点、不再弹加点窗。
+       * 力/敏/速任一项低于 25% 时优先补最低项（原版转化丸的三项权重口径）；
+       * 三项都达标时四项随机。玩家仍可通过属性书 / 金宝箱等特殊自由点调控属性。 */
+      let autoPoint = null;
       const forced = forcedStat();
       const pointRoom = Math.floor(statCapRoom());
-      if (forced && pointRoom >= 1) { grantPoint(forced); autoPoint = forced; }
-      else if (pointRoom >= 1) { S.freePoints = pendingPoints() + 1; freePoint = 1; }
+      if (pointRoom >= 1) {
+        const target = forced || STAT_KEYS[Math.floor(Math.random() * STAT_KEYS.length)];
+        if (grantPoint(target)) autoPoint = target;
+      }
       /* pointRoom < 1：已经顶到 651 硬上限（正常升级不会出现，只有调试/旧档超额时才会），
-       * 这一点不再发放，不能让 freePoints 越过上限。 */
+       * 这一点不再发放，不能让待分配点越过上限。 */
       /* 71~90 级：每级 1 个金宝箱（与原版一致；原版在这一段不再给属性，本版仍给 4 点，
        * 所以箱子点数被压到 12 点/箱，见 rollChestReward）。
        * `levelChests` 是**账号累计**上限 20：转生回到 1 级再升上来不会重复发，
@@ -4209,7 +4227,7 @@
         wsChoice: choices.length,
         attributeBook: false,
         chest,
-        freePoint,
+        freePoint: 0,
         autoPoint,
         autoPointName: autoPoint ? STAT_NAMES[autoPoint] : null,
         gifts,
@@ -4860,9 +4878,9 @@
     const base = GData.initialStats();
     for (let lv = 2; lv <= finalLevel; lv++) {
       base.maxHp += 5;
-      // 与玩家共用同一套点位预算：2 点随机（1/4 概率 +5 生命）+ 1 点自由点。
-      // 对手不弹窗，自由点默认在四项里随机挑；占比过低时一律优先补
-      // （和玩家的代选规则一致）。opts.freePointBias 是给平衡测量用的：
+      // 与玩家共用同一套点位预算：2 点随机（1/4 概率 +5 生命）+ 1 点系统分配。
+      // 对手不弹窗，系统点默认在四项里随机挑；力/敏/速占比低于 25% 时优先补
+      // （与玩家的系统分配同一口径）。opts.freePointBias 是给平衡测量用的：
       // 'lowest' 走平均分配，force/power/agility/speed/hp 走堆单项。
       for (let point = 0; point < FREE_POINT_RANDOM; point++) {
         const key = ['power', 'agility', 'speed', 'maxHp'][Math.floor(Math.random() * 4)];
@@ -6096,6 +6114,232 @@
   }
 
   /* ============================================================
+   * 【S22b】天梯赛区 / 赛区人机 / 周结算（2026-11）
+   * ------------------------------------------------------------
+   * 原版 `text7585`：天梯 30 级起、每 10 级一个赛区；积分每周一减半。
+   * 每个赛区每个等级 3 个人机（80-90 共 33 个），人机进排行榜、也参与积分结算，
+   * 每周一回到 300 分，且积分有 50 的硬下限。单机版没有真人，人机就是唯一对手。
+   * ============================================================ */
+  const RANK_DIVISIONS = Object.freeze([
+    { key: 'd30', lo: 30, hi: 39, frame: 1, label: '30级-39级' },
+    { key: 'd40', lo: 40, hi: 49, frame: 2, label: '40级-49级' },
+    { key: 'd50', lo: 50, hi: 59, frame: 3, label: '50级-59级' },
+    { key: 'd60', lo: 60, hi: 69, frame: 4, label: '60级-69级' },
+    { key: 'd70', lo: 70, hi: 79, frame: 5, label: '70级-79级' },
+    { key: 'd80', lo: 80, hi: 90, frame: 6, label: '80级-90级' },
+  ]);
+  const RANK_BOT_BASE_SCORE = 300;
+  const RANK_BOT_FLOOR = 50;
+  const RANK_BOT_PER_LEVEL = 3;
+  const RANK_BOT_NAMES = Object.freeze([
+    '松果见习生', '橡子巡逻员', '树洞守卫', '月光拾荒者', '雾林邮差', '坚果学徒',
+    '古树见习', '溪谷哨兵', '星屑旅人', '雪原新兵', '苔原猎手', '树冠信使',
+  ]);
+
+  /** 每周一 0 点（本地时间）为界，返回周一的 YYYY-MM-DD。 */
+  function rankWeekKey(now) {
+    const d = new Date(Number(now) || Date.now());
+    d.setHours(0, 0, 0, 0);
+    const dow = (d.getDay() + 6) % 7;   // 周一 = 0
+    d.setDate(d.getDate() - dow);
+    return dateKey(d);
+  }
+
+  function rankDivisionOf(level) {
+    const lv = Math.floor(Number(level) || 0);
+    return RANK_DIVISIONS.find((d) => lv >= d.lo && lv <= d.hi) || null;
+  }
+
+  /** 固定名册：每级 3 个，名字带等级后缀。 */
+  function rankBotPlan() {
+    const out = [];
+    let idx = 0;
+    for (const d of RANK_DIVISIONS) {
+      for (let lv = d.lo; lv <= d.hi; lv++) {
+        for (let k = 0; k < RANK_BOT_PER_LEVEL; k++) {
+          idx += 1;
+          out.push({
+            id: 'bot:' + d.key + ':' + lv + ':' + k, level: lv,
+            name: RANK_BOT_NAMES[(idx - 1) % RANK_BOT_NAMES.length] + '·' + lv,
+          });
+        }
+      }
+    }
+    return out;
+  }
+
+  function normalizeRankBots(raw) {
+    if (!Array.isArray(raw)) return [];
+    const out = [];
+    for (const item of raw) {
+      if (!object(item)) continue;
+      const id = String(item.id || '');
+      if (!/^bot:/.test(id)) continue;
+      out.push({
+        id,
+        level: Math.max(1, Math.min(MAX_PLAYER_LEVEL, integer(item.level, 1, 1))),
+        name: String(item.name || '').slice(0, 24),
+        score: Math.max(RANK_BOT_FLOOR, integer(item.score, 0)),
+        wins: Math.max(0, integer(item.wins, 0)),
+        losses: Math.max(0, integer(item.losses, 0)),
+      });
+    }
+    return out;
+  }
+
+  /** 两个周标识之间隔了几周（周一日期，至少按 1 周算）。 */
+  function rankWeeksBetween(from, to) {
+    const a = Date.parse(String(from) + 'T00:00:00Z');
+    const b = Date.parse(String(to) + 'T00:00:00Z');
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return 1;
+    return Math.max(1, Math.round((b - a) / (7 * 86400000)));
+  }
+
+  /** 换周：玩家积分按周减半、人机全部回到 300 分并清空胜负。幂等。
+   *  第一次跑（旧档没有 `rankWeek`）只补本周标识与名册，**不动**已有积分 ——
+   *  升级不该把玩家这一周的进度直接抹掉，下一次真正的周一才开始减半。 */
+  function rankSyncWeek() {
+    const s = state();
+    if (!s) return false;
+    const week = rankWeekKey();
+    const bots = Array.isArray(s.rankBots) ? s.rankBots : [];
+    if (s.rankWeek === week && bots.length) return false;
+    const fresh = !s.rankWeek;
+    const missed = fresh ? 1 : rankWeeksBetween(s.rankWeek, week);
+    s.rankWeek = week;
+    if (!fresh) {
+      s.integral = Math.max(0, Math.floor((Number(s.integral) || 0) / Math.pow(2, missed)));
+      s.rankWeekMatches = 0;
+      s.rankWins = 0;
+      s.rankLosses = 0;
+    }
+    s.rankBots = rankBotPlan().map((b) => ({
+      id: b.id, level: b.level, name: b.name, score: RANK_BOT_BASE_SCORE, wins: 0, losses: 0,
+    }));
+    save();
+    return true;
+  }
+
+  function rankCompareRows(a, b) {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (!!a.bot !== !!b.bot) return a.bot ? 1 : -1;
+    return String(a.botId || a.name).localeCompare(String(b.botId || b.name));
+  }
+
+  /** 本赛区的完整榜（真人只有自己 + 该赛区人机），名次已排好。 */
+  function rankBoard() {
+    const s = state();
+    const week = rankWeekKey();
+    if (!s) return { week, division: null, frame: 0, label: '', top: [], me: { score: 0, rank: 0 } };
+    rankSyncWeek();
+    const div = rankDivisionOf(s.level);
+    if (!div) return { week, division: null, frame: 0, label: '', top: [], me: { score: Math.max(0, Number(s.integral) || 0), rank: 0 } };
+    const rows = [];
+    for (const b of (s.rankBots || [])) {
+      if (!b || !rankDivisionOf(b.level) || rankDivisionOf(b.level).key !== div.key) continue;
+      rows.push({ bot: true, botId: b.id, name: b.name, level: b.level, score: b.score, wins: b.wins, losses: b.losses });
+    }
+    rows.push({
+      bot: false, botId: '', name: s.name || '我', level: s.level,
+      score: Math.max(0, Number(s.integral) || 0),
+      wins: Math.max(0, Number(s.rankWins) || 0), losses: Math.max(0, Number(s.rankLosses) || 0), mine: true,
+    });
+    rows.sort(rankCompareRows);
+    rows.forEach((row, i) => { row.rank = i + 1; });
+    const me = rows.find((r) => r.mine);
+    return {
+      week, division: { key: div.key, lo: div.lo, hi: div.hi, frame: div.frame, label: div.label },
+      frame: div.frame, label: div.label, top: rows,
+      me: { score: me ? me.score : 0, rank: me ? me.rank : 0 },
+    };
+  }
+
+  /** 随机挑一个对手人机：优先分数相近的 5 个，避免总打同一个人。 */
+  function rankOpponent() {
+    const board = rankBoard();
+    if (!board.division) return null;
+    const bots = board.top.filter((r) => r.bot);
+    if (!bots.length) return null;
+    const mine = Number(board.me.score) || 0;
+    const near = bots.slice().sort((a, b) => Math.abs(a.score - mine) - Math.abs(b.score - mine)).slice(0, 5);
+    return near[Math.floor(Math.random() * near.length)] || bots[0];
+  }
+
+  /** 积分档：与联机同一套（对手更高 +16；否则按分差 15/2/1/0，输了取负）。
+   *  单机版没有联机版的「300 分以上只匹配真人 / 回落人机不计分」规则；
+   *  另外单机打人机有**保底收益**：传 `minWinGain` 后赢球至少 +N（分差 ≥500 的 0 分档
+   *  在单机不会把收益抹成 0）。 */
+  function rankIntegralDelta(myScore, foeScore, win, opts) {
+    const gap = Number(foeScore) - Number(myScore);
+    let mag;
+    if (gap > 0) mag = 16;
+    else {
+      const ahead = -gap;
+      if (ahead < 50) mag = 15;
+      else if (ahead < 200) mag = 2;
+      else if (ahead < 500) mag = 1;
+      else mag = 0;
+    }
+    const delta = win ? mag : -mag;
+    const floor = Math.max(0, Math.floor(Number(opts && opts.minWinGain) || 0));
+    return (win && floor > 0) ? Math.max(floor, delta) : delta;
+  }
+
+  /** 一场天梯打完：玩家与人机同时结算（人机分数也真的会变）。 */
+  function rankApplyResult(botId, win, delta) {
+    const s = state();
+    if (!s) return null;
+    rankSyncWeek();
+    const d = Math.round(Number(delta) || 0);
+    s.integral = Math.max(0, Math.round((Number(s.integral) || 0) + d));
+    s.rankWeekMatches = Math.max(0, Number(s.rankWeekMatches) || 0) + 1;
+    if (win) s.rankWins = Math.max(0, Number(s.rankWins) || 0) + 1;
+    else s.rankLosses = Math.max(0, Number(s.rankLosses) || 0) + 1;
+    const bot = (s.rankBots || []).find((b) => b && String(b.id) === String(botId));
+    if (bot) {
+      /* 人机积分跟玩家反向同步结算，硬下限 50。 */
+      bot.score = Math.max(RANK_BOT_FLOOR, Math.min(100000, Math.round((Number(bot.score) || 0) - d)));
+      if (win) bot.losses = Math.max(0, Number(bot.losses) || 0) + 1;
+      else bot.wins = Math.max(0, Number(bot.wins) || 0) + 1;
+    }
+    save();
+    return { integral: s.integral, bot: bot ? { id: bot.id, score: bot.score } : null };
+  }
+
+  /** 周奖励资格：本赛区前 30、且至少超过一个人机、本周打过至少一场。 */
+  function rankAwardStatus() {
+    const s = state();
+    if (!s) return { eligible: false, rank: 0, played: 0, surpassedBot: false, week: rankWeekKey(), claimed: false };
+    const board = rankBoard();
+    const meIdx = board.top.findIndex((r) => r.mine);
+    const rank = meIdx >= 0 ? meIdx + 1 : 0;
+    const surpassedBot = meIdx >= 0 && board.top.slice(meIdx + 1).some((r) => r.bot);
+    const played = Math.max(0, Number(s.rankWeekMatches) || 0);
+    const claimed = String(s.rankCupClaimWeek || '') === board.week;
+    return {
+      week: board.week, division: board.division, rank, played, surpassedBot,
+      eligible: played > 0 && rank > 0 && rank <= 30 && surpassedBot,
+      cups: 50, claimed,
+    };
+  }
+
+  /** 领取 50 金杯：一周一次。 */
+  function claimRankCup() {
+    const s = state();
+    if (!s) return { ok: false, rank: 0, cups: 0, msg: '还没有存档。' };
+    const st = rankAwardStatus();
+    if (st.claimed) return { ok: false, already: true, rank: st.rank, cups: 0, goldCup: s.goldCup, msg: '本周的天梯奖励已经领取过了。' };
+    if (!st.played) return { ok: false, rank: st.rank, cups: 0, goldCup: s.goldCup, msg: '本周还没有参加天梯赛，先打一场再来领奖吧。' };
+    if (!(st.rank > 0) || st.rank > 30) return { ok: false, rank: st.rank, cups: 0, goldCup: s.goldCup, msg: '本周没有进入赛区前30名，暂时没有金杯奖励。' };
+    if (!st.surpassedBot) return { ok: false, rank: st.rank, cups: 0, goldCup: s.goldCup, msg: '还没有超过任何一个赛区人机，暂时没有金杯奖励。' };
+    s.goldCup = Math.max(0, Number(s.goldCup) || 0) + 50;
+    s.rankCupClaimWeek = st.week;
+    save();
+    return { ok: true, rank: st.rank, cups: 50, goldCup: s.goldCup, msg: '恭喜进入赛区前30名，成功获得50个金杯奖励！' };
+  }
+
+  /* ============================================================
    * 【S23】导出 window.State
    * ============================================================ */
   window.State = {
@@ -6169,8 +6413,11 @@
     weaponList, skillList, setWeapon, setSkill, forgetWeapon, forgetSkill, setWS, forgetWS,
     composeConvertPill, composeSeed, challengeExp, challengeFightsPerLevel, usePropMany, energyHardCap, ENERGY_HARD_CAP, PROP_HARD_CAP,
     MAX_PLAYER_LEVEL, energyCapForLevel,
+    /* 天梯赛区 / 周重置 / 赛区人机（经典页与复刻 DOM 页共用同一份数据）。 */
+    RANK_DIVISIONS, rankWeekKey, rankDivisionOf, rankBotPlan, rankSyncWeek,
+    rankBoard, rankOpponent, rankIntegralDelta, rankApplyResult, rankAwardStatus, claimRankCup,
     statShares, forcedStat, lowestStat, pendingPoints, allocatePoint, allocateEvenly,
-    STAT_SHARE_MIN, STAT_KEYS, STAT_NAMES, STAT_GAIN, HP_PER_STAT, FREE_POINT_RANDOM,
+    STAT_SHARE_MIN, SHARE_KEYS, STAT_KEYS, STAT_NAMES, STAT_GAIN, HP_PER_STAT, FREE_POINT_RANDOM,
     STAT_HARD_CAP, permanentStatTotal, statCapRoom, clampPermanentStats,
     CHALLENGE_EXP_BASE, CHALLENGE_EXP_PER_LEVEL, CHALLENGE_EXP_CAP_LEVEL, EXP_DIFF_STEP, EXP_DIFF_TIGHTEN,
     CHALLENGE_DIFF_RANGE, ARENA_CHAMPION_EXP, ARENA_ENERGY_COST, ARENA_EXP_PER_ENERGY,
