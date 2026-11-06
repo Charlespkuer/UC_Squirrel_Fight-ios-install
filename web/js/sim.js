@@ -757,6 +757,11 @@
    * 【SM5】闪避 / 暴击 / 被动加成
    * ============================================================ */
   function dodgeChance(att, def) {
+    /* 练功木桩不闪避：原版 `Stakes.beAttack()` 只有 `reduceBlood(currentRound.harm)`，
+     * 根本没有闪避分支；复刻以前让木桩吃通用的敏捷闪避，第二把菜刀被闪掉时
+     * 既没有闪避动作（木人只有待机/挨打两段），血条也不掉，看起来像"命中没伤害"。
+     * 这里从唯一的闪避出口挡住，武器/技能/幻兽的所有闪避判定一起生效。 */
+    if (def && (def.practice || def.npcType === 'wood')) return 0;
     if (att.mods && (att.mods.mustHitAll || att.mods.firstStrikeAll)) return 0;   // 「必中」类：塔 buff 百步穿杨 / 必中
     const wMust = att.mustHitNext;
     if (wMust) return 0;
@@ -1671,9 +1676,15 @@
        * 也不让「先机预判 / 风影身法」把这一下吃掉（传 `noDodge`）。
        * 反击伤害只打**原出手方**：传 `noReflect` 禁止绝对防御 / 荆棘把这一下弹回反击者
        * （以前的复用 `applyDamage` 会让某些反伤触发时，掉血的变成反击那一方）。 */
+      /* 反击**无视装死**（用户 2026-11 反馈：有玩家表示反击还是被装死救回）。
+       * 以前只有吸铁大法（18）/ 橡皮擦（7）/ 真·方天画戟带 `ignoreFakeDie`；
+       * 反击这一下也要直接打到 0 血、装死不接管（涅槃 / 金蝉脱壳仍照常判定）。 */
       const counter = { action: 'common' };
-      applyDamage(def, att, raw, counter, { noDodge: true, noReflect: true, counter: true });
+      applyDamage(def, att, raw, counter, { noDodge: true, noReflect: true, counter: true, ignoreFakeDie: true });
       r.counterDmg = counter.dmg;
+      /* 反击被护盾吸收的量：回放要按「反击伤害 = 掉血 + 被盾吃掉」飘红字
+       *（用户 2026-11 口径：打到盾上不能没有伤害数字）。 */
+      if (counter.shellAbsorb) r.counterAbsorb = counter.shellAbsorb;
       /* 只有**整下 0 伤害**才算“被挡下”（护盾全吸收 / 龟甲真把伤害吃满的极端档）；
        * 龟甲只减一部分时仍要按正常反击伤害飘字，不能标成“被挡下”。绝对防御已在
        * dmgReduce 的 counter 分支跳过，反击必中。 */
@@ -1885,7 +1896,16 @@
           if (w.id === 13 && chance(weaponEffect(w, 10, 3, 3) + trueW(w, 'stun'))) { def.stun = Math.max(def.stun, petDotRounds(def, 1)); r.stunApplied = true; }
           if (w.id === 16 && chance(weaponEffect(w, 10, 4, 4) + trueW(w, 'silence'))) { def.silence = Math.max(def.silence, petDotRounds(def, 4)); r.silenceApplied = true; }
         }
-        if (w.id === 14 && att.hp > 0) { const heal = Math.min(att.maxHp - att.hp, healOf(att, total * (weaponEffect(w, 10, 4, 2) + trueW(w, 'lifesteal')) / 100)); att.hp += heal; r.lifesteal = (r.lifesteal || 0) + heal; }
+        /* 忍者镖吸血按**减伤前**的武器伤害算，不是最终掉血量。
+         * 原版抓包（竞技场 065：武器 14:7，最终伤害 76，回复 42，当时缺 195 血未触顶）
+         * 正好对上 `42 / 34% ≈ 124` 的减伤前伤害；按最终 76 只会回 26。
+         * 仍然只在**真的打中**（total > 0）时触发；被打空/绝对防御挡成 0 不回血。 */
+        if (w.id === 14 && att.hp > 0 && total > 0) {
+          const pct = weaponEffect(w, 10, 4) + trueW(w, 'lifesteal');
+          const heal = Math.min(att.maxHp - att.hp, healOf(att, raw * pct / 100));
+          att.hp += heal;
+          r.lifesteal = (r.lifesteal || 0) + heal;
+        }
         if (w.id === 17 && att.hp > 0) { const self = Math.round(att.hp * 0.1); att.hp -= self; r.selfBurn = self; tryDeathSave(att, r); }
         // 反击（只有大榔头 2 的说明写“不会被反击”；死神镰刀 15 只是必中，仍可被反击）
         maybeCounter(att, def, r, (w.type === '近战' && w.id !== 2) ? 'melee' : 'ranged');

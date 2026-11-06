@@ -1,49 +1,51 @@
-# 松鼠大战 iOS 安装包（1.1.5 · 未签名 IPA + 网页版）
+# 松鼠大战 iOS 安装包（1.1.6 · 未签名 IPA + 网页版）
 
 > **2026-10-23：RAKUTEN 企业证书已被 Apple 吊销（revoked / certificateHold），不再提供 OTA 直装。**
-> 现在发布 **1.1.5 未签名 IPA**（构建 1106），可用 TrollStore 或 Sideloadly / AltStore / 爱思助手
-> 自签安装；网页版 / PWA 也已同步到 1.1.5。
+> 现在发布 **1.1.6 未签名 IPA**（构建 1107），可用 TrollStore 或 Sideloadly / AltStore / 爱思助手
+> 自签安装；网页版 / PWA 也已同步到 1.1.6。
 > **已安装旧企业版的玩家请不要删除 App**，先按
 > [存档救援指南](https://charlespkuer.github.io/UC_Squirrel_Fight-ios-install/rescue.html)
 > 把存档取出来。删除 App 会连存档容器一起删除。
 
-## 1.1.5 更新内容
+## 1.1.6 更新内容
 
-- 真武技特效按真 1 无 / 真 2 白 / 真 3 浅蓝 / 真 4 黄 / 真 5 红对齐。
-- 真武技每场 1 次（六种可再投的投掷武器 2 次）；修复木桩红字被绿回血盖住、同一把武器连续出手。
-- 已在 **iOS 27.1 模拟器（iPhone Duo，横屏）** 安装 1.1.5 构建，实测启动、系统页 `v1.1.5`、连续切后台/回前台背景保持、无尽塔战报滚动与底部按钮固定、挑战战斗正常开打无卡死。
+- 反击无视装死、被反击打死停在挨反击处。
+- 护盾改成血条内蓝条并计入血量数字，打到护盾也飘红字。
+- 经典主页四颗药丸（含超级丸）不再吞第 4 颗；现代主页 DOM 兜底页不再用村庄底图盖住 canvas 松鼠。
+- 10 级及以下武器不再放真化闪电；练功木桩不再闪避，血条每拍可见扣血。
+- 已在 **iOS 27.1 模拟器（iPhone Duo，横屏）** 安装 1.1.6 构建，实测启动、系统页 `v1.1.6`、连续切后台/回前台背景保持、无尽塔战报滚动与底部按钮固定、随机挑战战斗正常开打。
 
-## 1.1.5 未签名 IPA（推荐 TrollStore / 自签）
+## 1.1.6 未签名 IPA（推荐 TrollStore / 自签）
 
 | 包 | 适用 | 版本 / 构建 |
 |---|---|---|
-| [`squirrel_fight_1.1.5_ios_unsigned.ipa`](squirrel_fight_1.1.5_ios_unsigned.ipa) | iOS 26+（UIScene） | 1.1.5 / 1106 |
-| [`squirrel_fight_1.1.5_ios_legacy_unsigned.ipa`](squirrel_fight_1.1.5_ios_legacy_unsigned.ipa) | iOS 15.4–25（传统生命周期） | 1.1.5 / 1106 |
+| [`squirrel_fight_1.1.6_ios_unsigned.ipa`](squirrel_fight_1.1.6_ios_unsigned.ipa) | iOS 26+（UIScene） | 1.1.6 / 1107 |
+| [`squirrel_fight_1.1.6_ios_legacy_unsigned.ipa`](squirrel_fight_1.1.6_ios_legacy_unsigned.ipa) | iOS 15.4–25（传统生命周期） | 1.1.6 / 1107 |
 
 - Bundle ID：`com.ssdz.classic`；未签名；最低 iOS 15.4；iPhone + iPad；仅横屏。
-- **1.1.4.1 / 1.1.3 / 1.1.2 / 1.1.1 / 1.1.0.1 用户**：旧包构建号 1105 / 1104 / 1103 / 1102 / 1101，新包 **1106**；
+- 包内、文件名、安装页与游戏内版本描述均已统一为 **1.1.6**。
+- **1.1.5 / 1.1.4.1 / 1.1.3 / 1.1.2 / 1.1.1 / 1.1.0.1 用户**：旧包构建号 1106 / 1105 / 1104 / 1103 / 1102 / 1101，新包 **1107**；
   沿用同一 Bundle ID 和同一签名身份覆盖安装，不会提示降版本。升级前建议先在「系统 → 导出存档」备份。
 - **1.0.5 企业版用户**：企业包 Bundle ID 是 `jp.co.rakuten-sec.iSPEED...`，与未签名包
   `com.ssdz.classic` 不是同一个 App，存档容器不互通；必须按救援指南取出 JSON 后导入新版本。
 - 未签名 IPA **不能**从 Safari 直接 OTA 安装；需要用 TrollStore 或电脑侧载工具。
   免费 Apple ID 自签 7 天有效，到期重签，不需要开发者账号。
 - SHA-256：
-  - modern：`8f13838c5048bea79943358b3cc81e4a322445e48b686ee40662835c61c5b8a5`
-  - legacy：`df3fe6cd1a7f1aeaab2c10dc67983d9baeb226cf520fa06b75655dd0c123f5ad`
+  - modern：`abca1a61f9db7d997a959ecd0b4f6a633e360469f43ee7db647ebacf1e8767f3`
+  - legacy：`848732183ac6eb98cb22c81b08055af3e4a1e690e7591e4d0e21b9358b1462f3`
 
-## 上一个版本：1.1.4.1（构建 1105，仍可下载）
+## 上一个版本：1.1.5（构建 1106，仍可下载）
 
-- [iOS 26+](squirrel_fight_1.1.4.1_ios_unsigned.ipa) ·
-  [iOS 15.4–25](squirrel_fight_1.1.4.1_ios_legacy_unsigned.ipa)
-- 包内版本 1.1.4（iOS 只接受三段），文件名/游戏内 1.1.4.1。
-- SHA-256：`57e69ad912e7e961cd07714b8abf9ffca617856608e7bdc6413c278e97593909` /
-  `d08f462451c50ea4d334568bb163cd47e0910414a15e6be1459fc8326c8e8eb0`
+- [iOS 26+](squirrel_fight_1.1.5_ios_unsigned.ipa) ·
+  [iOS 15.4–25](squirrel_fight_1.1.5_ios_legacy_unsigned.ipa)
+- SHA-256：`8f13838c5048bea79943358b3cc81e4a322445e48b686ee40662835c61c5b8a5` /
+  `df3fe6cd1a7f1aeaab2c10dc67983d9baeb226cf520fa06b75655dd0c123f5ad`
 
 ## 网页版 / PWA（不用证书）
 
 **<https://charlespkuer.github.io/UC_Squirrel_Fight-ios-install/web/>**
 
-- 当前网页版版本：**1.1.5**（由主仓当前源码重建）。
+- 当前网页版版本：**1.1.6**（由主仓当前源码重建）。
 - iPhone / iPad 用 **Safari** 打开 → 分享 → **添加到主屏幕**；先安装，再从游戏里
   「系统 → 导入存档」导入救援 JSON。
 - 主屏幕 Web App 和 Safari 标签页的存储是**两个容器**；先玩过 Safari 的话先在那边导出，再切过去导入。
@@ -91,11 +93,11 @@ SHA-256 逐字节一致；问题不在打包，在 Apple 吊销了证书。
 
 | 文件 | 作用 |
 |---|---|
-| `index.html` | 1.1.5 安装 / 下载页 |
-| `squirrel_fight_1.1.5_ios_unsigned.ipa` | iOS 26+ 未签名包（构建 1106） |
-| `squirrel_fight_1.1.5_ios_legacy_unsigned.ipa` | iOS 15.4–25 未签名包（构建 1106） |
-| `squirrel_fight_1.1.4.1_ios_*_unsigned.ipa` | 上一版未签名包（构建 1105，保留回滚） |
-| `web/` | 网页版 / PWA 静态站点（1.1.5，本仓库 Pages 托管） |
+| `index.html` | 1.1.6 安装 / 下载页 |
+| `squirrel_fight_1.1.6_ios_unsigned.ipa` | iOS 26+ 未签名包（构建 1107） |
+| `squirrel_fight_1.1.6_ios_legacy_unsigned.ipa` | iOS 15.4–25 未签名包（构建 1107） |
+| `squirrel_fight_1.1.5_ios_*_unsigned.ipa` | 上一版未签名包（构建 1106，保留回滚） |
+| `web/` | 网页版 / PWA 静态站点（1.1.6，本仓库 Pages 托管） |
 | `web-src/` | PWA 源文件、web-mode.patch、重建脚本 |
 | `rescue.html` | 玩家存档救援指南 |
 | `rescue/ios-save-rescue.cjs` | 从 `.xcappdata` / Finder 备份 / 单文件提取存档 |

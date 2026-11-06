@@ -544,6 +544,9 @@
       /* 后台运行开关：默认关（切后台暂停音乐并冻结计时器，省电）。
        * 打开后切后台不暂停音乐、安卓壳也不 pauseTimers，游戏继续跑。 */
       backgroundRun: st.backgroundRun === true,
+      /* 兼容渲染：Android 16 / Adreno 的 Vulkan 合成器丢贴图层时，整页落软件图层。
+       * auto = 按机型和系统自动判断（默认）；on/off 供玩家手动逃生。 */
+      compatRender: ['auto', 'on', 'off'].includes(String(st.compatRender)) ? String(st.compatRender) : 'auto',
       uiMode: UIMODE_KEYS.includes(String(st.uiMode)) ? String(st.uiMode) : 'classic',
     };
   }
@@ -2378,11 +2381,13 @@
       S.goldPoint -= info.coin;
       if (info.book > 0) S.props[info.bookId] -= info.book;
     }
+    /* 每日任务按「尝试一次」计数：扣完费用、确定要掷成功率时先记，
+     * 不能等到 ok 才记 —— 否则升级失败永远做不完这条任务（2026-11 用户口径）。 */
+    bumpDaily('upgrade', 1, true);
     const ok = debugOn('noUpgradeFail') ? true : Math.random() * 100 < info.rate;
     if (!object(S.upgradeFails)) S.upgradeFails = {};
     const failKey = upgradeFailKey(kind, id);
     if (ok) {
-      bumpDaily('upgrade', 1, true);
       const arr = kind === 'weapon' ? S.weapons : S.skills;
       for (let i = 0; i < arr.length; i++) {
         const [wid, lv] = arr[i].split(':').map(Number);
@@ -4308,10 +4313,10 @@
     save();
     return true;
   }
-  /* 药丸分两类：属性丸（力/敏/速，含超级版）与经验丸。属性丸现在**也参与竞技场战斗面板**
-   *（`Main.startBattle` 的 `useProps`，见 classic-extras 的竞技场调用），所以"扣次数"必须分开记：
-   *   · 一场竞技/挑战各扣 1 次属性丸（真的用到了属性加成）；
-   *   · 经验丸只在**发经验的那一刻**扣 —— 经验竞技场会扣，碎片/幻兽竞技场不发经验就不扣。 */
+  /* 药丸分两类：属性丸（力/敏/速，含超级版）与经验丸。
+   * 竞技场按联机口径**只让经验丸生效**：属性丸不进竞技场面板、也不扣次数；
+   * 经验丸只在经验竞技场结算经验时扣 1 次（碎片/幻兽场不发经验就不扣）。
+   * `tickPropStates` 仍是普通挑战（一场两类全扣）与经验结算（只扣 exp）的公共入口。 */
   const STAT_PILL_IDS = [3, 4, 5, 41, 42, 43];
   const EXP_PILL = { 7: 0.4, 44: 0.6 };   // 经验丸 40% / 超级经验丸 60%
   /** 递减药丸剩余场次。`opts.kind`：`'stat'` 只扣属性丸 / `'exp'` 只扣经验丸 / 省略 = 全扣
