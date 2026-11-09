@@ -16,7 +16,7 @@
  * ============================================================ */
 'use strict';
 
-const VERSION = '1.1.6-b94b5ac-mw595alq';
+const VERSION = '1.1.8-d8fa482-mw9enqas';
 const CORE_CACHE = 'ssdz-core-' + VERSION;
 const RUNTIME_CACHE = 'ssdz-runtime-' + VERSION;
 const CORE = [
@@ -43,6 +43,7 @@ const CORE = [
   "./js/gamedata.js",
   "./js/gamedict.js",
   "./js/main.js",
+  "./js/nickname.js",
   "./js/pwa.js",
   "./js/sim.js",
   "./js/ssfight/render.js",
