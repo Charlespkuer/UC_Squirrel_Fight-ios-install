@@ -16,7 +16,7 @@
  * ============================================================ */
 'use strict';
 
-const VERSION = '1.1.8.2-9f07b90-mw9hzq1k';
+const VERSION = '1.1.9-7bc3d6f-mwdt2i7g';
 const CORE_CACHE = 'ssdz-core-' + VERSION;
 const RUNTIME_CACHE = 'ssdz-runtime-' + VERSION;
 const CORE = [
@@ -64,6 +64,7 @@ const CORE = [
   "./js/touch-fallback.js",
   "./js/tower-data.js",
   "./js/tower-hero.js",
+  "./js/tower-loader.js",
   "./js/tower-plot.js",
   "./js/tower-ui.js",
   "./js/tower.js",
